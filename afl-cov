@@ -568,6 +568,7 @@ def lcov_gen_coverage(cov_paths, cargs):
         lcov_opts += ' --follow'
 
     run_cmd(cargs.lcov_path \
+            + " --gcov-tool " + os.path.abspath(cargs.gcov_tool) + " " \
             + lcov_opts
             + " --no-checksum --capture --directory " \
             + cargs.code_dir + " --output-file " \
@@ -576,6 +577,7 @@ def lcov_gen_coverage(cov_paths, cargs):
 
     if (cargs.disable_lcov_exclude_pattern):
         out_lines = run_cmd(cargs.lcov_path \
+                + " --gcov-tool " + os.path.abspath(cargs.gcov_tool) + " " \
                 + lcov_opts
                 + " --no-checksum -a " + cov_paths['lcov_base'] \
                 + " -a " + cov_paths['lcov_info'] \
@@ -584,12 +586,14 @@ def lcov_gen_coverage(cov_paths, cargs):
     else:
         tmp_file = NamedTemporaryFile(delete=False)
         run_cmd(cargs.lcov_path \
+                + " --gcov-tool " + os.path.abspath(cargs.gcov_tool) + " " \
                 + lcov_opts
                 + " --no-checksum -a " + cov_paths['lcov_base'] \
                 + " -a " + cov_paths['lcov_info'] \
                 + " --output-file " + tmp_file.name, \
                 cov_paths['log_file'], cargs, LOG_ERRORS)
         out_lines = run_cmd(cargs.lcov_path \
+                + " --gcov-tool " + os.path.abspath(cargs.gcov_tool) + " " \
                 + lcov_opts
                 + " --no-checksum -r " + tmp_file.name \
                 + " " + cargs.lcov_exclude_pattern + "  --output-file " \
@@ -793,6 +797,7 @@ def init_tracking(cov_paths, cargs):
         ### reset code coverage counters - this is done only once as
         ### afl-cov is spinning up even if AFL is running in parallel mode
         run_cmd(cargs.lcov_path \
+                + " --gcov-tool " + os.path.abspath(cargs.gcov_tool) + " " \
                 + lcov_opts \
                 + " --no-checksum --zerocounters --directory " \
                 + cargs.code_dir, cov_paths['log_file'], cargs, LOG_ERRORS)
@@ -801,6 +806,7 @@ def init_tracking(cov_paths, cargs):
                 + lcov_opts
                 + " --no-checksum --capture --initial" \
                 + " --directory " + cargs.code_dir \
+                + " --gcov-tool " + os.path.abspath(cargs.gcov_tool) \
                 + " --output-file " \
                 + cov_paths['lcov_base'], \
                 cov_paths['log_file'], cargs, LOG_ERRORS)
@@ -845,7 +851,7 @@ def which(prog):
 
 def check_requirements(cargs):
     lcov = which( "lcov" );
-    gcov = which( "gcov" );
+    gcov = which( cargs.gcov_tool);
     genhtml = which( "genhtml" );
 
     if ( lcov == None ):
@@ -1187,6 +1193,8 @@ def parse_cmdline():
             help="Print version and exit", default=False)
     p.add_argument("-q", "--quiet", action='store_true',
             help="Quiet mode", default=False)
+    p.add_argument("--gcov-tool", type=str,
+            help="Path to gcov-tool", default="/usr/bin/gcov")
 
     return p.parse_args()
 
